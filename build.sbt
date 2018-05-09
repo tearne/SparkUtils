@@ -6,7 +6,12 @@ scalaVersion := "2.11.12"
 
 organization := "tearne"
 
+resolvers ++= Seq(
+  Resolver.bintrayRepo("tearne", "maven")
+)
+
 libraryDependencies ++= Seq(
+  "org.tearne" %% "sampler-core" % "0.3.15",
   "commons-io" % "commons-io" % "2.4",
   "org.threeten" % "threeten-extra" % "1.3.2",
   "org.apache.spark" %% "spark-core" % "2.3.0",
