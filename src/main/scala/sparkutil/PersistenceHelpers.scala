@@ -25,16 +25,14 @@
 
 package sparkutil
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Path}
 
 import org.apache.commons.io.FileUtils
+import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.{Dataset, SparkSession}
 import sampler.io.Logging
 
 trait PersistenceHelpers extends Logging {
-
-  val newLine: String = System.lineSeparator()
 
   implicit class RichString(str: String) {
     def toOption: Option[String] = Option(str).filterNot(_.trim.isEmpty())
@@ -44,17 +42,12 @@ trait PersistenceHelpers extends Logging {
     def name(): String = obj.getClass.getSimpleName.replace("$", "")
   }
 
-  def buildColumnExtractor(headerName: String, headerMap: Map[String, Int]): IndexedSeq[String] => String = {
-    val columnIndex = headerMap(headerName)
-    (lineToks: IndexedSeq[String]) => lineToks(columnIndex)
-  }
-
   def distributedWriteLocalMerge(path: Path, dataset: Dataset[_]): Unit =
     distributedWriteLocalMerge(path, dataset, None)
   def distributedWriteLocalMerge(path: Path, dataset: Dataset[_], header: String): Unit =
     distributedWriteLocalMerge(path, dataset, Some(header))
 
-  def distributedWriteLocalMerge(path: Path, dataset: Dataset[_], headerOpt: Option[String]): Unit = {
+  private def distributedWriteLocalMerge(path: Path, dataset: Dataset[_], headerOpt: Option[String]): Unit = {
     val partsPath = path.getParent.resolve(path.getFileName+".parts")
 
     if(dataset.schema.fields.length != 1 || dataset.schema.fields.head.dataType != StringType)
@@ -121,26 +114,3 @@ trait PersistenceHelpers extends Logging {
 }
 
 object PersistenceHelpers extends PersistenceHelpers
-
-object PersistenceHelperTest extends App {
-  val session: SparkSession = SparkSession.builder
-      .master("local[*]")
-      .getOrCreate()
-
-  import session.implicits._
-  val bigNumber = 99999
-
-  val outFile = Paths.get("out", "mergeTest.csv")
-
-  val dataset = (1 to bigNumber).toDS()
-  PersistenceHelpers.distributedWriteLocalMerge(outFile, dataset)
-
-  import scala.collection.JavaConverters._
-  val actual = FileUtils
-      .readLines(outFile.toFile)
-      .asScala
-      .map(_.toInt)
-      .sum
-
-  assume((1 to bigNumber).sum == actual, "merged file failed test")
-}

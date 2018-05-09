@@ -23,27 +23,34 @@
  * SOFTWARE.
  */
 
-package sparkutil
+package sparkutil.example
 
-import java.sql.Timestamp
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.nio.file.Paths
 
-trait DateHelpers {
-  def getEpochDay(str: String)(implicit dateFormat: DateTimeFormatter): Long =
-    LocalDateTime.parse(str, dateFormat).toLocalDate.toEpochDay
+import org.apache.commons.io.FileUtils
+import org.apache.spark.sql.SparkSession
+import sparkutil.PersistenceHelpers
 
-  def getYear(str: String)(implicit dateFormat: DateTimeFormatter): Int =
-    LocalDateTime.parse(str, dateFormat).toLocalDate.getYear
+object PersistenceHelperTest extends App {
+  val session: SparkSession = SparkSession.builder
+      .master("local[*]")
+      .getOrCreate()
 
-  implicit class TimestampImplicits(ts: Timestamp){
-    def year: Int = ts.toLocalDateTime.toLocalDate.getYear
-    def epochDay: Long = ts.toLocalDateTime.toLocalDate.toEpochDay
-    def daysUntil(that: Timestamp): Int = {
-      val result = that.epochDay - ts.epochDay
-      assume(result >= 0)
-      result.toInt
-    }
-  }
+  import session.implicits._
+  val bigNumber = 99999
+
+  val outFile = Paths.get("out", "mergeTest.csv")
+
+  val dataset = (1 to bigNumber).toDS()
+  PersistenceHelpers.distributedWriteLocalMerge(outFile, dataset)
+
+  import scala.collection.JavaConverters._
+  val actual = FileUtils
+      .readLines(outFile.toFile)
+      .asScala
+      .map(_.toInt)
+      .sum
+
+  assume((1 to bigNumber).sum == actual, "merged file failed test")
 }
-object DateHelpers extends DateHelpers
+
