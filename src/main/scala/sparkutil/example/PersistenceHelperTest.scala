@@ -28,7 +28,7 @@ package sparkutil.example
 import java.nio.file.Paths
 
 import org.apache.commons.io.FileUtils
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{Dataset, SparkSession}
 import sparkutil.PersistenceHelpers
 
 object PersistenceHelperTest extends App {
@@ -40,17 +40,19 @@ object PersistenceHelperTest extends App {
   val bigNumber = 99999
 
   val outFile = Paths.get("out", "mergeTest.csv")
+  val r = new scala.util.Random(100)
 
-  val dataset = (1 to bigNumber).toDS()
-  PersistenceHelpers.distributedWriteLocalMerge(outFile, dataset)
+  case class Observed(id: Int, count: Int)
 
-  import scala.collection.JavaConverters._
-  val actual = FileUtils
-      .readLines(outFile.toFile)
-      .asScala
-      .map(_.toInt)
-      .sum
+  val randomObservedDataset: Dataset[Observed] = {for (i <- 1 to bigNumber) yield Observed(i , Math.abs(r.nextInt()))}.toDS()
+  randomObservedDataset.show
+  PersistenceHelpers.distributedWriteLocalMerge(
+    outFile,
+    randomObservedDataset.map{case Observed(id,count)=> s"$id,$count"},
+    "id,count")
 
-  assume((1 to bigNumber).sum == actual, "merged file failed test")
+  val numberLines = FileUtils.readLines(outFile.toFile).size()
+  println(numberLines)
+  assume(numberLines == bigNumber+1, "merged file failed test") //add one for header
 }
 
