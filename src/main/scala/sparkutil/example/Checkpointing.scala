@@ -37,7 +37,7 @@ import scala.util.Random.nextDouble
 On first run a slow operation is executed and the results are saved to a cache file
 On second run the results are loaded from the cache
  */
-object CheckpointingTest extends App with Logging {
+object Checkpointing extends App with Logging {
   val session: SparkSession = SparkSession.builder
       .master("local[*]")
       .getOrCreate()
@@ -48,7 +48,6 @@ object CheckpointingTest extends App with Logging {
   val tmpFileDir = Paths.get("cache")
 
   case class Observed(id: Int, value: Double)
-
 
   info("start load data")
   val result: Dataset[Observed] = createCheckpoint(tmpFileDir.resolve(this.name)){

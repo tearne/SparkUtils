@@ -27,9 +27,9 @@ package sparkutil.example
 
 import java.nio.file.Paths
 
-import org.apache.commons.io.FileUtils
 import org.apache.spark.sql.{Dataset, SparkSession}
-import sparkutil.PersistenceHelpers
+
+import scala.util.Random
 
 object Joining extends App {
   val session: SparkSession = SparkSession.builder
@@ -37,19 +37,22 @@ object Joining extends App {
       .getOrCreate()
 
   import session.implicits._
+
   val bigNumber = 99999
 
   val outFile = Paths.get("out", "mergeTest.csv")
-  val r = new scala.util.Random(100)
 
   case class Observed(id: Int, count: Int)
   case class Details(id: Int, tagNumber: Int)
   case class JoinedDetails(id: Int, count: Int, tagNumber: Int)
 
-  val randomObservedDataset: Dataset[Observed] = {for (i <- 1 to bigNumber) yield Observed(i , Math.abs(r.nextInt()))}.toDS()
-  val detailsDataset: Dataset[Details] = {for (i <- 1 to bigNumber) yield Details(i , Math.abs(r.nextInt()))}.toDS()
+  val randomObservedDataset: Dataset[Observed] = {for (i <- 1 to bigNumber) yield Observed(i , Random.nextInt)}.toDS()
+
+  val detailsDataset: Dataset[Details] = {for (i <- 1 to bigNumber) yield Details(i , Random.nextInt)}.toDS()
+
   val joinedDetails: Dataset[JoinedDetails] = randomObservedDataset.joinSafe(detailsDataset,"left")(_.id,_.id)
     .map{case (observed,details) => JoinedDetails(observed.id,observed.count,details.tagNumber)}
+
   joinedDetails.show()
 }
 
