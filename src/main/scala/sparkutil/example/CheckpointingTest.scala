@@ -28,27 +28,37 @@ package sparkutil.example
 import java.nio.file.Paths
 
 import org.apache.spark.sql.{Dataset, SparkSession}
+import sampler.io.Logging
 import sparkutil._
 
-object CheckpointingTest extends App {
+import scala.util.Random.nextDouble
+
+/*
+On first run a slow operation is executed and the results are saved to a cache file
+On second run the results are loaded from the cache
+ */
+object CheckpointingTest extends App with Logging {
   val session: SparkSession = SparkSession.builder
       .master("local[*]")
       .getOrCreate()
 
   import session.implicits._
   implicit val sesh = session
-  val bigNumber = 99999
 
   val tmpFileDir = Paths.get("cache")
-  val r = new scala.util.Random(100)
 
-  case class Observed(id: Int, count: Int)
+  case class Observed(id: Int, value: Double)
 
-  def build(): Dataset[Observed] = {for (i <- 1 to bigNumber) yield Observed(i , Math.abs(r.nextInt()))}.toDS()
 
-  createCheckpoint(tmpFileDir.resolve(this.name)){
-    build()
+  info("start load data")
+  val result: Dataset[Observed] = createCheckpoint(tmpFileDir.resolve(this.name)){
+    (1 to 999).map{i =>
+      Thread.sleep(10) // Slow operation
+      Observed(i , nextDouble)
+    }.toDS
   }
+  info("finish load data")
 
+  result.show(10)
 }
 
