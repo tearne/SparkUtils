@@ -1,4 +1,5 @@
 /cache
+/out
 .idea
 
 *.class

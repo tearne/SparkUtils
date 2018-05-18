@@ -51,7 +51,7 @@ trait PersistenceHelpers extends Logging {
     val partsPath = path.getParent.resolve(path.getFileName+".parts")
 
     if(dataset.schema.fields.length != 1 || dataset.schema.fields.head.dataType != StringType)
-      warn("Dataset schemea is not a single string: "+dataset.schema.fields.toSeq)
+      error("Dataset schemea is not a single string: "+dataset.schema.fields.toSeq)
 
     if(Files.exists(partsPath)) {
       warn("Parts file already exists, deleting: "+partsPath)
@@ -59,7 +59,7 @@ trait PersistenceHelpers extends Logging {
     }
 
     info("Writing parts files "+partsPath.toAbsolutePath.toString)
-    dataset.write.csv(partsPath.toAbsolutePath.toString)
+    dataset.write.text(partsPath.toAbsolutePath.toString)
 
     mergeParts(partsPath, path, headerOpt)
   }
