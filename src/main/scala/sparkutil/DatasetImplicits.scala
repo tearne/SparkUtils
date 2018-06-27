@@ -25,7 +25,8 @@
 
 package sparkutil
 
-import org.apache.spark.sql.{Dataset, Encoder}
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{Dataset, Encoder, SparkSession}
 
 trait DatasetImplicits {
   implicit class DSEnrichment[P](ds1: Dataset[P]) extends Serializable {
@@ -55,6 +56,10 @@ trait DatasetImplicits {
         (implicit e1: Encoder[P], e2: Encoder[(Q, P)]): Dataset[P] = {
 
       ds1.map(d => (f(d), d)).orderBy("_1").map(_._2)
+    }
+
+    def zipWithIndex(session: SparkSession)(implicit e1: Encoder[(P, Long)]): Dataset[(P, Long)] = {
+      session.createDataset(ds1.rdd.zipWithIndex())
     }
   }
 
