@@ -33,6 +33,9 @@ trait DateHelpers {
   def getEpochDay(str: String)(implicit dateFormat: DateTimeFormatter): Long =
     LocalDateTime.parse(str, dateFormat).toLocalDate.toEpochDay
 
+  def getEpochDay(ts: Timestamp): Long =
+    ts.toLocalDateTime.toLocalDate().toEpochDay()
+
   def getYear(str: String)(implicit dateFormat: DateTimeFormatter): Int =
     LocalDateTime.parse(str, dateFormat).toLocalDate.getYear
 
