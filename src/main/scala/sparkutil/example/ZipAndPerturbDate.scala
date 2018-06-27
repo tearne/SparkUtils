@@ -65,12 +65,12 @@ object ZipAndPerturbDate extends App with Logging{
   info(">> Even if spark is always consistent in ordering, other applications might not be")
   raw.sortedBy(_.date).show
 
-  val secondsInDay = 24 * 60 * 60
+  val secondsInDay = 24 * 60 * 60 - 1
   def perturb(date: Timestamp, amount: Long) = {
     Timestamp.from(date.toInstant.plusSeconds(amount % secondsInDay))
   }
 
-  info(">> Add a tiny offset to each timestamp, to inform unambiguous ordering")
+  info(">> Add a tiny offset to each timestamp to create unambiguous ordering")
   raw.sortedBy(_.date)
       .zipWithIndex(session)
       .map{case (record, idx) =>
