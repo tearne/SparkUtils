@@ -30,14 +30,12 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 trait DateHelpers {
-  def getEpochDay(str: String)(implicit dateFormat: DateTimeFormatter): Long =
-    LocalDateTime.parse(str, dateFormat).toLocalDate.toEpochDay
-
-  def getEpochDay(ts: Timestamp): Long =
-    ts.toLocalDateTime.toLocalDate().toEpochDay()
-
-  def getYear(str: String)(implicit dateFormat: DateTimeFormatter): Int =
-    LocalDateTime.parse(str, dateFormat).toLocalDate.getYear
+  implicit class StringDateImplicits(str: String){
+    def epochDay(implicit dateFormat: DateTimeFormatter): Long =
+      LocalDateTime.parse(str, dateFormat).toLocalDate.toEpochDay
+    def year(implicit dateFormat: DateTimeFormatter): Int =
+      LocalDateTime.parse(str, dateFormat).toLocalDate.getYear
+  }
 
   implicit class TimestampImplicits(ts: Timestamp){
     def year: Int = ts.toLocalDateTime.toLocalDate.getYear
