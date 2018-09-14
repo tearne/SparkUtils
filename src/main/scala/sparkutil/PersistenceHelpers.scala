@@ -39,7 +39,7 @@ trait PersistenceHelpers extends Logging {
   }
 
   implicit class ObjectName(obj: Any) {
-    def name(): String = obj.getClass.getCanonicalName
+    def name(): String = obj.getClass.getCanonicalName.replace("$", "")
   }
 
   def distributedWriteLocalMerge(path: Path, dataset: Dataset[_]): Unit =
