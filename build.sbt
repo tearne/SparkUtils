@@ -24,6 +24,7 @@ val myDeps = Seq(
 lazy val root = (project in file("."))
     .settings(
       name := projectName,
+      organization := projectOrg,
       version := projectVersion,
       licenses += projectLicenses,
       scalaVersion := buildScalaVersion,
